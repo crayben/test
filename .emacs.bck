@@ -1,0 +1,115 @@
+(column-number-mode t);显示列号
+(show-paren-mode t);显示括号匹配
+(display-time-mode 1);显示时间，格式如下
+(mouse-avoidance-mode 'animate);光标靠近鼠标指针时，让鼠标指针自动让开，别挡住视线。很好玩阿，这个功能
+(setq default-fill-column 80);默认显示 80列就换行
+(setq frame-title-format "wang@%b");在标题栏提示你目前在什么位置。你要把zhan改成自己的用户名
+
+
+;;;cc-mode
+(require 'cc-mode)
+(c-set-offset 'inline-open 0)
+(c-set-offset 'friend '-)
+(c-set-offset 'substatement-open 0)
+
+
+(defun my-c-mode-common-hook()
+(setq tab-width 4 indent-tabs-mode nil)
+;;; hungry-delete and auto-newline
+(c-toggle-auto-hungry-state 1)
+(define-key c-mode-base-map [(control \`)] 'hs-toggle-hiding)
+(define-key c-mode-base-map [(return)] 'newline-and-indent)
+(define-key c-mode-base-map [(f7)] 'compile)
+'(compile-command "make")
+(define-key c-mode-base-map [(meta \`)] 'c-indent-command)
+;; (define-key c-mode-base-map [(tab)] 'hippie-expand)
+(define-key c-mode-base-map [(tab)] 'my-indent-or-complete)
+(define-key c-mode-base-map [(meta ?/)] 'semantic-ia-complete-symbol-menu)
+(global-set-key [(f5)] 'speedbar)
+
+
+(setq c-macro-shrink-window-flag t)
+(setq c-macro-preprocessor "cpp")
+(setq c-macro-cppflags " ")
+(setq c-macro-prompt-flag t)
+(setq hs-minor-mode t)
+(setq abbrev-mode t)
+)
+(add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
+
+
+(defun my-c++-mode-hook()
+(setq tab-width 4 indent-tabs-mode nil)
+(c-set-style "stroustrup")
+;; (define-key c++-mode-map [f3] 'replace-regexp)
+)
+
+
+
+
+
+(setq skeleton-pair t)
+
+(setq skeleton-pair-alist
+      '((?\( _ ?\))
+    (?[  _ ?])
+    (?{  _ ?})
+    (?\" _ ?\")))
+
+(defun autopair-insert (arg)
+  (interactive "P")
+  (let (pair)
+    (cond
+     ((assq last-command-char skeleton-pair-alist)
+      (autopair-open arg))
+     (t
+      (autopair-close arg)))))
+
+(defun autopair-open (arg)
+  (interactive "P")
+  (let ((pair (assq last-command-char
+            skeleton-pair-alist)))
+    (cond
+     ((and (not mark-active)
+       (eq (car pair) (car (last pair)))
+       (eq (car pair) (char-after)))
+      (autopair-close arg))
+     (t
+      (skeleton-pair-insert-maybe arg)))))
+
+(defun autopair-close (arg)
+  (interactive "P")
+  (cond
+   (mark-active
+    (let (pair open)
+      (dolist (pair skeleton-pair-alist)
+    (when (eq last-command-char (car (last pair)))
+      (setq open (car pair))))
+      (setq last-command-char open)
+      (skeleton-pair-insert-maybe arg)))
+   ((looking-at
+     (concat "[ \t\n]*"
+         (regexp-quote (string last-command-char))))
+    (replace-match (string last-command-char))
+    (indent-according-to-mode))
+   (t
+    (self-insert-command (prefix-numeric-value arg))
+    (indent-according-to-mode))))
+
+(defun autopair-backspace (arg)
+  (interactive "p")
+  (if (eq (char-after)
+      (car (last (assq (char-before) skeleton-pair-alist))))
+      (and (char-after) (delete-char 1)))
+  (delete-backward-char arg))
+
+(global-set-key [backspace] 'autopair-backspace)
+(define-key isearch-mode-map [backspace] 'isearch-delete-char) ;; required to fix behaviour in isearch
+
+(global-set-key "("  'autopair-insert)
+(global-set-key ")"  'autopair-insert)
+(global-set-key "["  'autopair-insert)
+(global-set-key "]"  'autopair-insert)
+(global-set-key "{"  'autopair-insert)
+(global-set-key "}"  'autopair-insert)
+(global-set-key "\"" 'autopair-insert)

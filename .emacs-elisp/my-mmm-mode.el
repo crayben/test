@@ -1,0 +1,7 @@
+(add-to-list 'load-path (expand-file-name "~/.emacs-elisp/mmm-mode"))
+(require 'mmm-mode)
+(require 'mmm-auto)
+(setq mmm-global-mode 'maybe)
+(mmm-add-mode-ext-class 'html-mode "\\.php\\'" 'html-php)
+(mmm-add-mode-ext-class 'html-mode nil 'mason)
+(mmm-add-mode-ext-class nil "\\.nw\\'" 'noweb)
